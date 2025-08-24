@@ -8,6 +8,9 @@ import SwiftUI
 
 struct MarketListView: View {
     @StateObject private var vm = MarketViewModel()
+//    @EnvironmentObject var vm: MarketViewModel
+    @ObservedObject private var network = NetworkMonitor.shared
+    @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.managedObjectContext) private var context
         @FetchRequest(
             sortDescriptors: []
@@ -18,16 +21,81 @@ struct MarketListView: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
-                CoinTableView(coins: filteredCoins, style: .market) { coin in
+            VStack(spacing: 0) {
+                if !network.isConnected {
+                    Text("📡 Offline – showing cached data")
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(Color.orange)
+                }
+                
+                if let error = vm.errorMessage {
+                    ErrorView(message: error) { Task { await vm.refresh() } }
+                }
+
+//                if let error = vm.errorMessage {
+//                    HStack {
+//                        Text(error)
+//                            .font(.caption)
+//                            .foregroundColor(.white)
+//                            .lineLimit(2)
+//                            .multilineTextAlignment(.leading)
+//
+//                        Spacer()
+//
+//                        Button("Retry") {
+//                            Task {
+//                                await vm.refresh(force: true)
+//                            }
+//                        }
+//                        .font(.caption.bold())
+//                        .foregroundColor(.white)
+//                        .padding(.horizontal, 8)
+//                        .padding(.vertical, 4)
+//                        .background(Color.black.opacity(0.3))
+//                        .clipShape(Capsule())
+//                    }
+//                    .padding(.horizontal)
+//                    .padding(.vertical, 6)
+//                    .frame(maxWidth: .infinity)
+//                    .background(Color.red)
+//                    .onAppear {
+//                            print("❌ Error message is: \(error)")
+//                        }
+//                }else {
+//                    Color.clear
+//                        .frame(height: 0)
+//                        .onAppear {
+//                            print("✅ vm.errorMessage is nil")
+//                        }
+//                }
+
+                CoinTableView(coins: filteredCoins) { coin in
                     selectedCoin = coin
                 }
             }
+
             .navigationTitle("Crypto Prices")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "Search coin")
+            .toolbar {
+                ToolbarItem(placement: .bottomBar) {
+                    Picker("Theme", selection: $themeManager.selectedScheme) {
+                        Text("System").tag(ColorScheme?.none)
+                        Text("Light").tag(ColorScheme?.some(.light))
+                        Text("Dark").tag(ColorScheme?.some(.dark))
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 200)
+                    }
+            }
             .navigationDestination(item: $selectedCoin) { coin in
                 CoinDetailView(id: coin.id, name: coin.name)
+            }
+            .onChange(of: vm.errorMessage) {
+                print("📢 errorMessage changed → \(vm.errorMessage ?? "nil")")
             }
         }
     }

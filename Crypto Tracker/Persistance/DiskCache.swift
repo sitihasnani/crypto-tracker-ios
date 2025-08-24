@@ -5,6 +5,7 @@
 //  Created by Siti Hasnani on 22/08/2025.
 //
 import Foundation
+import UIKit
 
 final class DiskCache{
     static let shared = DiskCache()
@@ -30,5 +31,25 @@ final class DiskCache{
         let url = cacheURL.appendingPathComponent(filename)
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(T.self, from: data)
+    }
+
+    private func imageURL(for filename: String) -> URL {
+            cacheURL.appendingPathComponent(filename)
+        }
+
+    func save(image: UIImage, forKey key: String) {
+        let url = imageURL(for: key)
+        guard let data = image.pngData() else { return }
+        do {
+            try data.write(to: url, options: .atomic)
+        } catch {
+            print("Error saving image to disk: \(error)")
+        }
+    }
+
+    func loadImage(forKey key: String) -> UIImage? {
+        let url = imageURL(for: key)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data)
     }
 }

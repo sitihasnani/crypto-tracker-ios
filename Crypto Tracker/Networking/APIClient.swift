@@ -11,6 +11,7 @@ enum APIError: LocalizedError {
     case networkError(URLError)
     case decodingError(Error)
     case badStatusCode(Int)
+    case tooManyRequests
     case unknown
     
     var errorDescription: String? {
@@ -20,6 +21,7 @@ enum APIError: LocalizedError {
         case .networkError(let error): return error.localizedDescription
         case .decodingError: return "Decoding Error"
         case .badStatusCode(let code): return "Bad Status Code: \(code)"
+        case .tooManyRequests: return "Too Many Requests. Please slow down"
         case .unknown: return "Unknown Error"
         }
     }
@@ -47,7 +49,14 @@ final class APIClient {
         catch { throw APIError.unknown }
 
         guard let http = resp as? HTTPURLResponse else { throw APIError.unknown }
-        guard (200..<300).contains(http.statusCode) else { throw APIError.badStatusCode(http.statusCode) }
+        switch http.statusCode {
+        case 200..<300:
+            break
+        case 429:
+            throw APIError.tooManyRequests
+        default:
+            throw APIError.badStatusCode(http.statusCode)
+        }
 
         do { return try JSONDecoder().decode(T.self, from: data) }
         catch { throw APIError.decodingError(error) }

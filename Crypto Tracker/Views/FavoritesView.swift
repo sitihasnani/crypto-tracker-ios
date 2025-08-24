@@ -21,17 +21,27 @@ struct FavoritesView: View {
 
     var body: some View {
         NavigationStack {
-            CoinTableView(
-                coins: favoriteCoins, style: .favorites
-            ) { coin in
-                selectedCoin = coin
-            }
-            .navigationTitle("Favourites")
-            .navigationDestination(item: $selectedCoin) { coin in
-                CoinDetailView(id: coin.id, name: coin.name)
-            }
-            .refreshable {
-                await marketVM.refresh()
+            if favorites.isEmpty {
+                VStack {
+                    Spacer()
+                    Text("No favorite coins")
+                        .foregroundColor(.secondary)
+                        .font(.headline)
+                    Spacer()
+                }
+            } else {
+                CoinTableView(
+                    coins: favoriteCoins, style: .favorites
+                ) { coin in
+                    selectedCoin = coin
+                }
+                .navigationTitle("Favourites")
+                .navigationDestination(item: $selectedCoin) { coin in
+                    CoinDetailView(id: coin.id, name: coin.name)
+                }
+                .refreshable {
+                    await marketVM.refresh()
+                }
             }
         }
         .onAppear {

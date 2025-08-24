@@ -35,9 +35,17 @@ final class CoinDetailViewModel: ObservableObject {
         do {
             let coinDetail = try await service.fetchDetail(id: id)
             self.detail = coinDetail
-            DiskCache.shared.save(coinDetail, to: "detail_\(id).json")
+            if (try? JSONEncoder().encode(coinDetail)) != nil {
+                DiskCache.shared.save(coinDetail, to: "detail_\(id).json")
+            }
         } catch {
+            if detail == nil {
+                if let cached: CoinDetailsModel = DiskCache.shared.load(CoinDetailsModel.self, from: "detail_\(id).json") {
+                    self.detail = cached
+                }
+            }
             self.errorMessage = (error as? APIError)?.localizedDescription ?? error.localizedDescription
+
         }
         isLoading = false
     }

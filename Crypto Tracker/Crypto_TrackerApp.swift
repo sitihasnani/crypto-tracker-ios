@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct Crypto_TrackerApp: App {
     let persistenceController = PersistenceController.shared
+    @StateObject private var themeManager = ThemeManager.shared
     var body: some Scene {
         WindowGroup {
             TabView {
@@ -24,6 +25,8 @@ struct Crypto_TrackerApp: App {
                     }
                 }
             .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            .environmentObject(themeManager)
+            .preferredColorScheme(themeManager.selectedScheme)
         }
     }
 }

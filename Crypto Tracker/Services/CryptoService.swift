@@ -7,30 +7,67 @@
 import Foundation
 
 protocol CryptoServicing {
-    func fetchMarket() async throws -> [CoinModel]
+    func fetchMarket(page: Int, perPage: Int) async throws -> [CoinModel]
     func fetchDetail(id: String) async throws -> CoinDetailsModel
 
 }
 
 final class CryptoService: CryptoServicing {
     private let api = APIClient()
+    private let cacheKeyMarket = "cached_market"
+    private let cacheKeyDetailsPrefix = "cached_detail_"
 
-    func fetchMarket() async throws -> [CoinModel] {
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
+
+    func fetchMarket(page: Int = 1, perPage: Int = 50) async throws -> [CoinModel] {
         let query: [URLQueryItem] = [
             .init(name: "vs_currency", value: "usd"),
             .init(name: "order", value: "market_cap_desc"),
-            .init(name: "per_page", value: "50"),
-            .init(name: "page", value: "1")
+            .init(name: "per_page", value: "\(perPage)"),
+            .init(name: "page", value: "\(page)")
         ]
-        return try await api.get("/coins/markets", query: query)
+        do {
+            let coins: [CoinModel] = try await api.get("/coins/markets", query: query)
 
-    }
+            // Cache successful response
+            if let data = try? encoder.encode(coins) {
+                UserDefaults.standard.set(data, forKey: cacheKeyMarket)
+            }
+
+            return coins
+            } catch {
+                // Fallback to cache if offline
+            if let cached = UserDefaults.standard.data(forKey:  cacheKeyMarket),
+                   let coins = try? decoder.decode([CoinModel].self, from: cached) {
+                    return coins
+                }
+            throw error
+            }
+        }
 
     func fetchDetail(id: String) async throws -> CoinDetailsModel {
         let query: [URLQueryItem] = [
             .init(name: "localization", value: "false"),
             .init(name: "market_data", value: "true")
         ]
-        return try await api.get("/coins/\(id)", query: query)
-    }
+
+        do {
+            let details: CoinDetailsModel = try await api.get("/coins/\(id)", query: query)
+
+                // Cache successful response
+            if let data = try? encoder.encode(details) {
+                UserDefaults.standard.set(data, forKey: cacheKeyDetailsPrefix + id)
+            }
+
+            return details
+        } catch {
+                // Fallback to cache if offline
+            if let cached = UserDefaults.standard.data(forKey: cacheKeyDetailsPrefix + id),
+            let details = try? decoder.decode(CoinDetailsModel.self, from: cached) {
+                return details
+            }
+            throw error
+            }
+        }
 }

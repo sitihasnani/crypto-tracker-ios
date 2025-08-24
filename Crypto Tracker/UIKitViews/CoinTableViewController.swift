@@ -5,6 +5,7 @@
 //  Created by Siti Hasnani on 23/08/2025.
 //
 import UIKit
+import CoreData
 
 class CoinTableViewController: UITableViewController {
     var coins: [CoinModel] = []
@@ -12,6 +13,18 @@ class CoinTableViewController: UITableViewController {
     var style: CoinTableViewCellStyle = .market
     private let viewModel = MarketViewModel()
     private let searchBar = UISearchBar()
+    private var frc: NSFetchedResultsController<Favorite>?
+
+    private let offlineBanner: UILabel = {
+        let label = UILabel()
+        label.backgroundColor = .systemOrange
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 12)
+        label.textAlignment = .center
+        label.text = "📡 Offline – showing cached data"
+        label.isHidden = true
+        return label
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,19 +33,37 @@ class CoinTableViewController: UITableViewController {
         refreshControl = UIRefreshControl()
         refreshControl?.addTarget(self, action: #selector(refreshData), for: .valueChanged)
 
+        offlineBanner.frame = CGRect(x: 0, y: 0, width: tableView.frame.width, height: 24)
+            tableView.tableHeaderView = offlineBanner
+
         Task {
-            await viewModel.refresh(force: false)
-            tableView.reloadData()
+            await refreshDataAsync()
         }
+
+        let request: NSFetchRequest<Favorite> = Favorite.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        frc = NSFetchedResultsController(fetchRequest: request,
+                                         managedObjectContext: PersistenceController.shared.container.viewContext,
+                                         sectionNameKeyPath: nil,
+                                         cacheName: nil)
+        frc?.delegate = self
+        try? frc?.performFetch()
+
     }
 
     @objc private func refreshData() {
-        Task {
-            await viewModel.refresh(force: true)
-            refreshControl?.endRefreshing()
-            tableView.reloadData()
+        Task { await refreshDataAsync() }
+    }
+
+    private func refreshDataAsync() async {
+        await viewModel.refresh(force: true)
+        DispatchQueue.main.async {
+            self.refreshControl?.endRefreshing()
+            self.offlineBanner.isHidden = !self.viewModel.isOffline
+            self.tableView.reloadData()
         }
     }
+
     override func tableView(_ tableView: UITableView,
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let coin = coins[indexPath.row]
@@ -44,7 +75,9 @@ class CoinTableViewController: UITableViewController {
             } else {
                 FavoritesManager.shared.addFavorite(coin: coin)
             }
-            tableView.reloadRows(at: [indexPath], with: .automatic)
+            if let cell = tableView.cellForRow(at: indexPath) as? CoinTableViewCell {
+                        cell.setFavorite(!isFav, animated: true)
+            }
             completion(true)
         }
 
@@ -73,4 +106,11 @@ class CoinTableViewController: UITableViewController {
         didSelect?(coin)
     }
 }
+
+extension CoinTableViewController: NSFetchedResultsControllerDelegate {
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.reloadData()
+    }
+}
+
 

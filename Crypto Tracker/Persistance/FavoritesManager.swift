@@ -21,6 +21,7 @@ final class FavoritesManager {
         fav.name = coin.name
         fav.symbol = coin.symbol
         fav.imageUrl = coin.image
+        fav.dateAdded = Date()
 
         saveContext()
     }

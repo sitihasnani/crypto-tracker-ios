@@ -31,6 +31,21 @@ class CoinTableViewCell: UITableViewCell {
     }()
     private var style: CoinTableViewCellStyle = .market
 
+    func setFavorite(_ isFavorite: Bool, animated: Bool) {
+        guard style == .market else { return }
+
+        if animated {
+            UIView.transition(with: favoriteIcon,
+                                duration: 0.25,
+                                options: .transitionCrossDissolve,
+                                animations: {
+                                    self.favoriteIcon.isHidden = !isFavorite
+                                })
+            } else {
+                favoriteIcon.isHidden = !isFavorite
+            }
+        }
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
@@ -94,15 +109,21 @@ class CoinTableViewCell: UITableViewCell {
                 favoriteIcon.isHidden = true
             }
 
-        if let urlStr = coin.image, let url = URL(string: urlStr) {
-            URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-                if let data = data, let img = UIImage(data: data) {
-                    DispatchQueue.main.async {
-                        self?.coinImageView.image = img
+        if let urlStr = coin.image {
+            if let cached = ImageCache.shared.image(forKey: urlStr) {
+                coinImageView.image = cached
+            } else if let url = URL(string: urlStr) {
+                URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+                    if let data = data, let img = UIImage(data: data) {
+                        DispatchQueue.main.async {
+                            self?.coinImageView.image = img
+                            ImageCache.shared.setImage(img, forKey: urlStr)
+                        }
                     }
-                }
-            }.resume()
-        } else {
+                }.resume()
+            }
+        }
+        else {
             coinImageView.image = nil
         }
     }
