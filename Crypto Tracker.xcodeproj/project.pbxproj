@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		293CB1692E5A12FE008FF75F /* CryptoTrackerModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 293CB1672E5A12FE008FF75F /* CryptoTrackerModel.xcdatamodeld */; };
+		293CB2202E60123F008FF75F /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 293CB21F2E60123F008FF75F /* ViewInspector */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				293CB2202E60123F008FF75F /* ViewInspector in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -141,6 +143,7 @@
 			);
 			name = "Crypto TrackerTests";
 			packageProductDependencies = (
+				293CB21F2E60123F008FF75F /* ViewInspector */,
 			);
 			productName = "Crypto TrackerTests";
 			productReference = 293CB0FA2E58A001008FF75F /* Crypto TrackerTests.xctest */;
@@ -201,6 +204,9 @@
 			);
 			mainGroup = 293CB0E02E58A000008FF75F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				293CB21E2E60123F008FF75F /* XCRemoteSwiftPackageReference "ViewInspector" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 293CB0EA2E58A000008FF75F /* Products */;
 			projectDirPath = "";
@@ -598,6 +604,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		293CB21E2E60123F008FF75F /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nalexn/ViewInspector.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		293CB21F2E60123F008FF75F /* ViewInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 293CB21E2E60123F008FF75F /* XCRemoteSwiftPackageReference "ViewInspector" */;
+			productName = ViewInspector;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		293CB1672E5A12FE008FF75F /* CryptoTrackerModel.xcdatamodeld */ = {

@@ -10,12 +10,12 @@ struct CoinTableView: UIViewControllerRepresentable {
     var coins: [CoinModel]
     var style: CoinTableViewCellStyle = .market
     var didSelect: (CoinModel) -> Void
+    @ObservedObject var viewModel: MarketViewModel
 
     func makeUIViewController(context: Context) -> CoinTableViewController {
-        let vc = CoinTableViewController()
+        let vc = CoinTableViewController(viewModel: viewModel, style: style)
         vc.coins = coins
         vc.didSelect = didSelect
-        vc.style = style
         return vc
     }
 

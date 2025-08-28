@@ -11,8 +11,6 @@ final class MarketViewModel: ObservableObject {
     @Published private(set) var coins: [CoinModel] = []
     @Published private(set) var isLoading: Bool = false
     @Published var errorMessage: String?
-    @Published var showError: Bool = false
-    @Published var isOffline: Bool = false
 
     private let service: CryptoServicing
     private let cacheFile = "market_data.json"
@@ -36,17 +34,12 @@ final class MarketViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            // try await Task.sleep(nanoseconds: 2_000_000_000) // 2-second delay for skeleton testing
             let data = try await service.fetchMarket(page: 1, perPage: 50)
             self.coins = data
             DiskCache.shared.save(data, to: cacheFile)
         } catch {
-            self.isOffline = true
-            if let cached: [CoinModel] = DiskCache.shared.load([CoinModel].self, from: cacheFile) {
-                self.coins = cached
-            }
             self.errorMessage = (error as? APIError)?.localizedDescription ?? error.localizedDescription
-//            self.showError = true
-//            print("❌ Error set in refresh: \(self.errorMessage ?? "nil")")
         }
 
         isLoading = false

@@ -50,5 +50,32 @@ final class CoinDetailViewModel: ObservableObject {
         isLoading = false
     }
 
+    // For testing notification purposes only
+    func setTestPrice(price: Double) {
+        if let currentDetail = detail {
+            var newCurrentPrice = currentDetail.market_data?.current_price ?? [:]
+            newCurrentPrice["usd"] = price
+
+            let newMarketData = CoinDetailsModel.MarketData(
+                current_price: newCurrentPrice,
+                market_cap: currentDetail.market_data?.market_cap,
+                price_change_percentage_24h: currentDetail.market_data?.price_change_percentage_24h,
+                high_24h: currentDetail.market_data?.high_24h,
+                low_24h: currentDetail.market_data?.low_24h,
+                total_volume: currentDetail.market_data?.total_volume
+            )
+            let newDetail = CoinDetailsModel(
+                id: currentDetail.id,
+                symbol: currentDetail.symbol,
+                name: currentDetail.name,
+                image: currentDetail.image,
+                hashing_algorithm: currentDetail.hashing_algorithm,
+                description: currentDetail.description,
+                market_data: newMarketData
+            )
+            detail = newDetail
+        }
+    }
+
 
 }

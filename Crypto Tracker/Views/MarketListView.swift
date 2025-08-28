@@ -32,48 +32,55 @@ struct MarketListView: View {
                 }
                 
                 if let error = vm.errorMessage {
-                    ErrorView(message: error) { Task { await vm.refresh() } }
+                    HStack {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+
+                        Spacer()
+
+                        Button("Retry") {
+                            Task {
+                                await vm.refresh(force: true)
+                            }
+                        }
+                        .font(.caption.bold())
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.black.opacity(0.3))
+                        .clipShape(Capsule())
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red)
+                    .onAppear {
+                            print("❌ Error message is: \(error)")
+                        }
+                }else {
+                    Color.clear
+                        .frame(height: 0)
+                        .onAppear {
+                            print("✅ vm.errorMessage is nil")
+                        }
                 }
 
-//                if let error = vm.errorMessage {
-//                    HStack {
-//                        Text(error)
-//                            .font(.caption)
-//                            .foregroundColor(.white)
-//                            .lineLimit(2)
-//                            .multilineTextAlignment(.leading)
-//
-//                        Spacer()
-//
-//                        Button("Retry") {
-//                            Task {
-//                                await vm.refresh(force: true)
-//                            }
-//                        }
-//                        .font(.caption.bold())
-//                        .foregroundColor(.white)
-//                        .padding(.horizontal, 8)
-//                        .padding(.vertical, 4)
-//                        .background(Color.black.opacity(0.3))
-//                        .clipShape(Capsule())
-//                    }
-//                    .padding(.horizontal)
-//                    .padding(.vertical, 6)
-//                    .frame(maxWidth: .infinity)
-//                    .background(Color.red)
-//                    .onAppear {
-//                            print("❌ Error message is: \(error)")
-//                        }
-//                }else {
-//                    Color.clear
-//                        .frame(height: 0)
-//                        .onAppear {
-//                            print("✅ vm.errorMessage is nil")
-//                        }
-//                }
-
-                CoinTableView(coins: filteredCoins) { coin in
-                    selectedCoin = coin
+                if vm.isLoading {
+                    List {
+                        ForEach(0..<10) { _ in
+                            SkeletonRowView()
+                        }
+                    }
+                    .listStyle(.plain)
+                    .redacted(reason: .placeholder)
+                    .shimmering()
+                } else {
+                    CoinTableView(coins: filteredCoins, style: .market, didSelect: { coin in
+                        selectedCoin = coin
+                    }, viewModel: vm) // Removed isNetworkConnected
                 }
             }
 
@@ -115,6 +122,3 @@ struct MarketListView: View {
         return coins
     }
 }
-
-
-

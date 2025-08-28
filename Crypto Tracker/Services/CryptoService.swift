@@ -9,6 +9,7 @@ import Foundation
 protocol CryptoServicing {
     func fetchMarket(page: Int, perPage: Int) async throws -> [CoinModel]
     func fetchDetail(id: String) async throws -> CoinDetailsModel
+    func searchCoins(query: String) async throws -> [CoinModel]
 
 }
 
@@ -27,24 +28,14 @@ final class CryptoService: CryptoServicing {
             .init(name: "per_page", value: "\(perPage)"),
             .init(name: "page", value: "\(page)")
         ]
-        do {
-            let coins: [CoinModel] = try await api.get("/coins/markets", query: query)
+        let coins: [CoinModel] = try await api.get("/coins/markets", query: query)
 
-            // Cache successful response
-            if let data = try? encoder.encode(coins) {
-                UserDefaults.standard.set(data, forKey: cacheKeyMarket)
-            }
-
-            return coins
-            } catch {
-                // Fallback to cache if offline
-            if let cached = UserDefaults.standard.data(forKey:  cacheKeyMarket),
-                   let coins = try? decoder.decode([CoinModel].self, from: cached) {
-                    return coins
-                }
-            throw error
-            }
+        if let data = try? encoder.encode(coins) {
+            UserDefaults.standard.set(data, forKey: cacheKeyMarket)
         }
+
+        return coins
+    }
 
     func fetchDetail(id: String) async throws -> CoinDetailsModel {
         let query: [URLQueryItem] = [
@@ -55,7 +46,6 @@ final class CryptoService: CryptoServicing {
         do {
             let details: CoinDetailsModel = try await api.get("/coins/\(id)", query: query)
 
-                // Cache successful response
             if let data = try? encoder.encode(details) {
                 UserDefaults.standard.set(data, forKey: cacheKeyDetailsPrefix + id)
             }
@@ -70,4 +60,12 @@ final class CryptoService: CryptoServicing {
             throw error
             }
         }
+
+    func searchCoins(query: String) async throws -> [CoinModel] {
+        let queryItem: [URLQueryItem] = [
+            .init(name: "query", value: query)
+        ]
+        let searchResponse: CoinSearchResponse = try await api.get("/search", query: queryItem)
+        return searchResponse.coins
+    }
 }

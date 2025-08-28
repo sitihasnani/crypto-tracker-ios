@@ -10,7 +10,7 @@ final class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
     private init() {}
 
-    @Published var selectedScheme: ColorScheme? = nil // nil = follow system
+    @Published var selectedScheme: ColorScheme? = nil 
 }
 
 

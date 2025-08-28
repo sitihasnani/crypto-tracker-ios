@@ -46,7 +46,7 @@ final class FavoritesManager {
         do {
             try context.save()
         } catch {
-            print("❌ Failed to save favorite: \(error)")
+            print("Failed to save favorite: \(error)")
         }
     }
 }

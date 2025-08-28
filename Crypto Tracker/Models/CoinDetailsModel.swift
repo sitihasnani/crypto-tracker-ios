@@ -6,7 +6,7 @@
 //
 import Foundation
 
-struct CoinDetailsModel: Identifiable, Codable {
+struct CoinDetailsModel: Identifiable, Codable, Equatable {
     let id: String
     let symbol: String
     let name: String
@@ -15,14 +15,14 @@ struct CoinDetailsModel: Identifiable, Codable {
     let description: Description?
     let market_data: MarketData?
 
-    struct ImageURLs: Codable {
+    struct ImageURLs: Codable, Equatable {
         let thumb: String?
         let small: String?
         let large: String?
     }
 
-    struct Description: Codable { let en: String? }
-    struct MarketData: Codable {
+    struct Description: Codable, Equatable { let en: String? }
+    struct MarketData: Codable, Equatable {
         let current_price: [String: Double]?
         let market_cap: [String: Double]?
         let price_change_percentage_24h: Double?

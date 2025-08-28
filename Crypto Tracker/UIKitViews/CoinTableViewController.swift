@@ -11,20 +11,19 @@ class CoinTableViewController: UITableViewController {
     var coins: [CoinModel] = []
     var didSelect: ((CoinModel) -> Void)?
     var style: CoinTableViewCellStyle = .market
-    private let viewModel = MarketViewModel()
+    private var viewModel: MarketViewModel
     private let searchBar = UISearchBar()
     private var frc: NSFetchedResultsController<Favorite>?
 
-    private let offlineBanner: UILabel = {
-        let label = UILabel()
-        label.backgroundColor = .systemOrange
-        label.textColor = .white
-        label.font = .systemFont(ofSize: 12)
-        label.textAlignment = .center
-        label.text = "📡 Offline – showing cached data"
-        label.isHidden = true
-        return label
-    }()
+    init(viewModel: MarketViewModel, style: CoinTableViewCellStyle) {
+        self.viewModel = viewModel
+        self.style = style
+        super.init(style: .plain)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,13 +31,6 @@ class CoinTableViewController: UITableViewController {
 
         refreshControl = UIRefreshControl()
         refreshControl?.addTarget(self, action: #selector(refreshData), for: .valueChanged)
-
-        offlineBanner.frame = CGRect(x: 0, y: 0, width: tableView.frame.width, height: 24)
-            tableView.tableHeaderView = offlineBanner
-
-        Task {
-            await refreshDataAsync()
-        }
 
         let request: NSFetchRequest<Favorite> = Favorite.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
@@ -59,7 +51,6 @@ class CoinTableViewController: UITableViewController {
         await viewModel.refresh(force: true)
         DispatchQueue.main.async {
             self.refreshControl?.endRefreshing()
-            self.offlineBanner.isHidden = !self.viewModel.isOffline
             self.tableView.reloadData()
         }
     }
@@ -112,5 +103,3 @@ extension CoinTableViewController: NSFetchedResultsControllerDelegate {
         tableView.reloadData()
     }
 }
-
-

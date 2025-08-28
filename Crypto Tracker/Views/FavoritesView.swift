@@ -31,11 +31,12 @@ struct FavoritesView: View {
                 }
             } else {
                 CoinTableView(
-                    coins: favoriteCoins, style: .favorites
-                ) { coin in
-                    selectedCoin = coin
-                }
-                .navigationTitle("Favourites")
+                    coins: favoriteCoins, style: .favorites, didSelect: { coin in
+                        selectedCoin = coin
+                    }, viewModel: marketVM
+                )
+                .navigationTitle("Favorites")
+                .navigationBarTitleDisplayMode(.inline)
                 .navigationDestination(item: $selectedCoin) { coin in
                     CoinDetailView(id: coin.id, name: coin.name)
                 }
